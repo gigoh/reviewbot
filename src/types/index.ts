@@ -1,9 +1,12 @@
 export type LLMProvider = 'anthropic' | 'ollama';
 export type ReviewLanguage = 'english' | 'korean' | 'japanese' | 'chinese';
+export type VCSPlatform = 'gitlab' | 'github';
 
 export interface Config {
-  gitlabUrl: string;
-  gitlabToken: string;
+  vcsPlatform: VCSPlatform;
+  gitlabUrl?: string;
+  gitlabToken?: string;
+  githubToken?: string;
   llmProvider: LLMProvider;
   anthropicApiKey?: string;
   ollamaEndpoint?: string;
@@ -18,6 +21,7 @@ export interface LLMResponse {
 }
 
 export interface MergeRequestInfo {
+  platform: VCSPlatform;
   projectId: string | number;
   mrIid: number;
   title: string;

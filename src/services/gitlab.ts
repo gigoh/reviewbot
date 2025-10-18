@@ -33,6 +33,7 @@ export class GitLabClient {
         : undefined;
 
       return {
+        platform: 'gitlab',
         projectId: mr.project_id as string | number,
         mrIid: mr.iid as number,
         title: mr.title as string,
