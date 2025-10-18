@@ -3,7 +3,8 @@
 import { Command } from 'commander';
 import { reviewMergeRequest } from './index';
 import { Logger } from './utils/logger';
-import { getReviewMetadata } from './utils/network';
+import { getReviewMetadata } from './utils/metadata';
+import { loadConfig } from './config';
 
 const program = new Command();
 
@@ -20,6 +21,9 @@ program
   .option('-f, --format <format>', 'Output format: text or json', 'text')
   .action(async (options) => {
     try {
+      // Load config to get LLM provider info for metadata
+      const config = loadConfig();
+
       const result = await reviewMergeRequest({
         mrUrl: options.url,
         postComment: options.post,
@@ -54,7 +58,7 @@ program
         console.log('OVERALL ASSESSMENT:');
         console.log(result.overallAssessment);
         console.log('\n' + '-'.repeat(80));
-        console.log(getReviewMetadata());
+        console.log(getReviewMetadata(config));
         console.log('='.repeat(80) + '\n');
 
         if (options.post) {
