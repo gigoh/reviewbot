@@ -6,6 +6,7 @@ AI-powered code review bot for GitLab merge requests using AI (Claude or local L
 
 - Automated code review using AI
 - **Multiple LLM Providers**: Anthropic Claude or local LLMs via Ollama
+- **Bilingual Reviews**: All feedback provided in both Korean and English
 - Supports GitLab Cloud and self-hosted instances
 - CLI tool for easy integration
 - Detailed feedback on code quality, security, performance, and best practices
@@ -152,25 +153,34 @@ AI CODE REVIEW RESULTS
 ================================================================================
 
 SUMMARY:
+**Korean (한국어):**
+이 병합 요청은 JWT 토큰을 사용한 새로운 사용자 인증 기능을 도입합니다.
+구현은 전반적으로 견고하지만 프로덕션에 병합하기 전에 해결해야 할 몇 가지 보안 및 오류 처리 문제가 있습니다.
+
+**English:**
 This merge request introduces a new user authentication feature with JWT tokens.
 The implementation is generally solid but has some security and error handling
-concerns that should be addressed.
+concerns that should be addressed before merging to production.
 
 DETAILED FEEDBACK:
 --------------------------------------------------------------------------------
 [CRITICAL] src/auth/login.ts:45
-  Password comparison is not using constant-time comparison, vulnerable to timing attacks
+  비밀번호 비교가 상수 시간 비교를 사용하지 않아 타이밍 공격에 취약합니다 / Password comparison is not using constant-time comparison, vulnerable to timing attacks
 
 [WARNING] src/auth/jwt.ts:23
-  JWT secret should be loaded from environment variables, not hardcoded
+  JWT 시크릿은 하드코딩이 아닌 환경 변수에서 로드해야 합니다 / JWT secret should be loaded from environment variables, not hardcoded
 
 [SUGGESTION] src/utils/validator.ts:12
-  Consider using a validation library like Joi or Yup for more robust input validation
+  더 강력한 입력 검증을 위해 Joi 또는 Yup과 같은 검증 라이브러리 사용을 고려하세요 / Consider using a validation library like Joi or Yup for more robust input validation
 
 [INFO] src/types/user.ts:8
-  Good use of TypeScript interfaces for type safety
+  타입 안정성을 위한 TypeScript 인터페이스의 좋은 사용 / Good use of TypeScript interfaces for type safety
 
 OVERALL ASSESSMENT:
+**Korean (한국어):**
+수정 제안과 함께 승인 - 코드는 기능적이고 잘 구조화되어 있지만 프로덕션에 병합하기 전에 보안 문제를 해결해야 합니다.
+
+**English:**
 APPROVE_WITH_SUGGESTIONS - The code is functional and well-structured, but should
 address the security concerns before merging to production.
 

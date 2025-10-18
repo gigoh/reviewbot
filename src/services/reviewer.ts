@@ -91,10 +91,10 @@ export class AIReviewer {
   }
 
   /**
-   * Create the prompt for Claude to review the code
+   * Create the prompt for the LLM to review the code
    */
   private createReviewPrompt(mrInfo: MergeRequestInfo, diffContent: string): string {
-    return `You are an expert code reviewer. Please review the following merge request and provide constructive feedback.
+    return `You are an expert code reviewer. Please review the following merge request and provide constructive feedback in BOTH Korean and English.
 
 **Merge Request Information:**
 - Title: ${mrInfo.title}
@@ -114,21 +114,31 @@ Please provide a thorough code review focusing on:
 5. **Security**: Are there any security vulnerabilities or concerns?
 6. **Testing**: Does the code appear to be testable? Are there missing test cases?
 
+**IMPORTANT: Provide ALL feedback in BOTH Korean and English.**
+
 **Output Format:**
 Please structure your review as follows:
 
 ## Summary
-[A brief 2-3 sentence summary of the changes and overall quality]
+**Korean (한국어):**
+[A brief 2-3 sentence summary in Korean]
+
+**English:**
+[A brief 2-3 sentence summary in English]
 
 ## Detailed Comments
 [List specific issues or suggestions, one per line, in this format:]
-- [SEVERITY] file_path:line_range - Description of issue/suggestion
+- [SEVERITY] file_path:line_range - [Korean description] / [English description]
   (where SEVERITY is one of: INFO, SUGGESTION, WARNING, CRITICAL)
 
 ## Overall Assessment
-[Your final verdict: APPROVE, APPROVE_WITH_SUGGESTIONS, or REQUEST_CHANGES]
+**Korean (한국어):**
+[Your final verdict in Korean: 승인, 수정 제안과 함께 승인, or 변경 요청]
 
-Be constructive, specific, and prioritize the most important issues.`;
+**English:**
+[Your final verdict in English: APPROVE, APPROVE_WITH_SUGGESTIONS, or REQUEST_CHANGES]
+
+Be constructive, specific, and prioritize the most important issues. Remember to provide BOTH Korean and English for every section.`;
   }
 
   /**
