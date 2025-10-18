@@ -1,4 +1,5 @@
 export type LLMProvider = 'anthropic' | 'ollama';
+export type ReviewLanguage = 'english' | 'korean' | 'japanese' | 'chinese';
 
 export interface Config {
   gitlabUrl: string;
@@ -7,6 +8,7 @@ export interface Config {
   anthropicApiKey?: string;
   ollamaEndpoint?: string;
   ollamaModel?: string;
+  reviewLanguage: ReviewLanguage;
   maxDiffSize?: number;
   reviewPromptTemplate?: string;
 }

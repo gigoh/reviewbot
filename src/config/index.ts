@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { Config, LLMProvider } from '../types';
+import { Config, LLMProvider, ReviewLanguage } from '../types';
 
 dotenv.config();
 
@@ -7,6 +7,7 @@ export function loadConfig(): Config {
   const gitlabUrl = process.env.GITLAB_URL || 'https://gitlab.com';
   const gitlabToken = process.env.GITLAB_TOKEN;
   const llmProvider = (process.env.LLM_PROVIDER || 'anthropic') as LLMProvider;
+  const reviewLanguage = (process.env.REVIEW_LANGUAGE || 'english') as ReviewLanguage;
 
   if (!gitlabToken) {
     throw new Error('GITLAB_TOKEN environment variable is required');
@@ -24,6 +25,7 @@ export function loadConfig(): Config {
       gitlabToken,
       llmProvider,
       anthropicApiKey,
+      reviewLanguage,
       maxDiffSize: process.env.MAX_DIFF_SIZE
         ? parseInt(process.env.MAX_DIFF_SIZE, 10)
         : 50000,
@@ -39,6 +41,7 @@ export function loadConfig(): Config {
       llmProvider,
       ollamaEndpoint,
       ollamaModel,
+      reviewLanguage,
       maxDiffSize: process.env.MAX_DIFF_SIZE
         ? parseInt(process.env.MAX_DIFF_SIZE, 10)
         : 50000,
