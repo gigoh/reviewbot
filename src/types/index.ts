@@ -14,6 +14,7 @@ export interface Config {
   reviewLanguage: ReviewLanguage;
   maxDiffSize?: number;
   reviewPromptTemplate?: string;
+  verbose?: boolean;
 }
 
 export interface LLMResponse {

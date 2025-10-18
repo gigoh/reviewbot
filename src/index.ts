@@ -10,6 +10,7 @@ export interface ReviewOptions {
   mrUrl: string;
   postComment?: boolean;
   outputFormat?: 'text' | 'json';
+  verbose?: boolean;
 }
 
 /**
@@ -20,7 +21,13 @@ export async function reviewMergeRequest(
 ): Promise<ReviewResult> {
   try {
     // Load configuration
-    const config = loadConfig();
+    const config = loadConfig(options.verbose);
+
+    // Enable verbose logging if requested
+    if (config.verbose) {
+      Logger.setVerbose(true);
+      Logger.info('Verbose mode enabled - API requests and responses will be logged');
+    }
 
     // Parse the MR/PR URL
     const { platform, projectId, mrIid } = parseMergeRequestUrl(options.mrUrl);

@@ -34,7 +34,10 @@ export class OllamaClient implements ILLMClient {
         stream: false,
       };
 
-      const response = await fetch(`${this.endpoint}/api/generate`, {
+      const endpoint = `${this.endpoint}/api/generate`;
+      Logger.verboseRequest(endpoint, 'POST', requestBody);
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,6 +50,8 @@ export class OllamaClient implements ILLMClient {
       }
 
       const data = (await response.json()) as OllamaGenerateResponse;
+
+      Logger.verboseResponse(endpoint, response.status, data);
 
       return { text: data.response };
     } catch (error: any) {

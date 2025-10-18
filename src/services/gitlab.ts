@@ -22,7 +22,18 @@ export class GitLabClient {
     try {
       Logger.debug(`Fetching MR ${mrIid} from project ${projectId}`);
 
+      Logger.verboseRequest('GitLab API - MergeRequests.show', 'GET', { projectId, mrIid });
+
       const mr = await this.client.MergeRequests.show(projectId, mrIid);
+
+      Logger.verboseResponse('GitLab API - MergeRequests.show', 200, {
+        id: mr.id,
+        iid: mr.iid,
+        title: mr.title,
+        state: mr.state,
+        source_branch: mr.source_branch,
+        target_branch: mr.target_branch,
+      });
 
       const diffRefs = (mr as any).diff_refs
         ? {
@@ -59,7 +70,14 @@ export class GitLabClient {
     try {
       Logger.debug(`Fetching changes for MR ${mrIid}`);
 
+      Logger.verboseRequest('GitLab API - MergeRequests.allDiffs', 'GET', { projectId, mrIid });
+
       const mrChanges = await this.client.MergeRequests.allDiffs(projectId, mrIid);
+
+      Logger.verboseResponse('GitLab API - MergeRequests.allDiffs', 200, {
+        files_count: mrChanges.length,
+        files: mrChanges.map((c: any) => ({ path: c.new_path, new_file: c.new_file, deleted_file: c.deleted_file })),
+      });
 
       const changes: DiffChange[] = mrChanges.map((change: any) => ({
         oldPath: change.old_path,
@@ -88,7 +106,15 @@ export class GitLabClient {
     try {
       Logger.debug(`Posting general comment to MR ${mrIid}`);
 
+      Logger.verboseRequest('GitLab API - MergeRequestNotes.create', 'POST', {
+        projectId,
+        mrIid,
+        comment: comment.substring(0, 100) + (comment.length > 100 ? '...' : ''),
+      });
+
       await this.client.MergeRequestNotes.create(projectId, mrIid, comment);
+
+      Logger.verboseResponse('GitLab API - MergeRequestNotes.create', 201, { status: 'created' });
 
       Logger.success('General comment posted successfully');
     } catch (error: any) {
@@ -128,9 +154,18 @@ export class GitLabClient {
         oldPath: filePath,
       };
 
+      Logger.verboseRequest('GitLab API - MergeRequestDiscussions.create', 'POST', {
+        projectId,
+        mrIid,
+        comment: comment.substring(0, 100) + (comment.length > 100 ? '...' : ''),
+        position: { ...position, newLine: lineNumber },
+      });
+
       await this.client.MergeRequestDiscussions.create(projectId, mrIid, comment, {
         position,
       });
+
+      Logger.verboseResponse('GitLab API - MergeRequestDiscussions.create', 201, { status: 'created' });
 
       Logger.debug(`Line comment posted to ${filePath}:${lineNumber}`);
     } catch (error: any) {
