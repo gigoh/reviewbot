@@ -3,7 +3,6 @@ export type ReviewLanguage = 'english' | 'korean' | 'japanese' | 'chinese';
 export type VCSPlatform = 'gitlab' | 'github';
 
 export interface Config {
-  vcsPlatform: VCSPlatform;
   gitlabUrl?: string;
   gitlabToken?: string;
   githubToken?: string;
