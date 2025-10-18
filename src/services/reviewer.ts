@@ -6,10 +6,12 @@ import { createLLMClient } from './llm/factory';
 export class AIReviewer {
   private llmClient: ILLMClient;
   private maxDiffSize: number;
+  private config: Config;
 
   constructor(config: Config) {
     this.llmClient = createLLMClient(config);
     this.maxDiffSize = config.maxDiffSize || 50000;
+    this.config = config;
   }
 
   /**
@@ -94,7 +96,11 @@ export class AIReviewer {
    * Create the prompt for the LLM to review the code
    */
   private createReviewPrompt(mrInfo: MergeRequestInfo, diffContent: string): string {
-    return `You are an expert code reviewer. Please review the following merge request and provide constructive feedback in BOTH Korean and English.
+    const language = this.config.reviewLanguage;
+
+    // For English, provide single-language output
+    if (language === 'english') {
+      return `You are an expert code reviewer. Please review the following merge request and provide constructive feedback.
 
 **Merge Request Information:**
 - Title: ${mrInfo.title}
@@ -114,31 +120,77 @@ Please provide a thorough code review focusing on:
 5. **Security**: Are there any security vulnerabilities or concerns?
 6. **Testing**: Does the code appear to be testable? Are there missing test cases?
 
-**IMPORTANT: Provide ALL feedback in BOTH Korean and English.**
+**Output Format:**
+Please structure your review as follows:
+
+## Summary
+[A brief 2-3 sentence summary of the changes and overall quality]
+
+## Detailed Comments
+[List specific issues or suggestions, one per line, in this format:]
+- [SEVERITY] file_path:line_range - Description of issue/suggestion
+  (where SEVERITY is one of: INFO, SUGGESTION, WARNING, CRITICAL)
+
+## Overall Assessment
+[Your final verdict: APPROVE, APPROVE_WITH_SUGGESTIONS, or REQUEST_CHANGES]
+
+Be constructive, specific, and prioritize the most important issues.`;
+    }
+
+    // For other languages, provide bilingual output
+    const languageMap = {
+      korean: { name: 'Korean', native: '한국어', approveExample: '승인, 수정 제안과 함께 승인, or 변경 요청' },
+      japanese: { name: 'Japanese', native: '日本語', approveExample: '承認、提案付き承認、または変更要求' },
+      chinese: { name: 'Chinese', native: '中文', approveExample: '批准、建议批准或请求更改' },
+    };
+
+    const langInfo = languageMap[language] || languageMap.korean;
+
+    return `You are an expert code reviewer. Please review the following merge request and provide constructive feedback in BOTH ${langInfo.name} and English.
+
+**Merge Request Information:**
+- Title: ${mrInfo.title}
+- Description: ${mrInfo.description || 'No description provided'}
+- Source Branch: ${mrInfo.sourceBranch}
+- Target Branch: ${mrInfo.targetBranch}
+
+**Code Changes:**
+${diffContent}
+
+**Instructions:**
+Please provide a thorough code review focusing on:
+1. **Code Quality**: Is the code well-structured, readable, and maintainable?
+2. **Best Practices**: Does it follow language-specific best practices and conventions?
+3. **Potential Bugs**: Are there any potential bugs, edge cases, or error handling issues?
+4. **Performance**: Are there any performance concerns or optimization opportunities?
+5. **Security**: Are there any security vulnerabilities or concerns?
+6. **Testing**: Does the code appear to be testable? Are there missing test cases?
+
+**IMPORTANT: Provide ALL feedback in BOTH ${langInfo.name} and English.**
 
 **Output Format:**
 Please structure your review as follows:
 
 ## Summary
-**Korean (한국어):**
-[A brief 2-3 sentence summary in Korean]
+**${langInfo.name} (${langInfo.native}):**
+[A brief 2-3 sentence summary in ${langInfo.name}]
 
 **English:**
 [A brief 2-3 sentence summary in English]
 
 ## Detailed Comments
 [List specific issues or suggestions, one per line, in this format:]
-- [SEVERITY] file_path:line_range - [Korean description] / [English description]
+- [SEVERITY] file_path:line_range - [${langInfo.name} description] / [English description]
   (where SEVERITY is one of: INFO, SUGGESTION, WARNING, CRITICAL)
 
 ## Overall Assessment
-**Korean (한국어):**
-[Your final verdict in Korean: 승인, 수정 제안과 함께 승인, or 변경 요청]
+**${langInfo.name} (${langInfo.native}):**
+[Your final verdict in ${langInfo.name}: ${langInfo.approveExample}]
 
 **English:**
 [Your final verdict in English: APPROVE, APPROVE_WITH_SUGGESTIONS, or REQUEST_CHANGES]
 
-Be constructive, specific, and prioritize the most important issues. Remember to provide BOTH Korean and English for every section.`;
+Be constructive, specific, and prioritize the most important issues. Remember to provide BOTH ${langInfo.name} and English for every section.`;
   }
 
   /**
