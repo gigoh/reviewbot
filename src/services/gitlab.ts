@@ -24,6 +24,14 @@ export class GitLabClient {
 
       const mr = await this.client.MergeRequests.show(projectId, mrIid);
 
+      const diffRefs = (mr as any).diff_refs
+        ? {
+            baseSha: (mr as any).diff_refs.base_sha,
+            headSha: (mr as any).diff_refs.head_sha,
+            startSha: (mr as any).diff_refs.start_sha,
+          }
+        : undefined;
+
       return {
         projectId: mr.project_id as string | number,
         mrIid: mr.iid as number,
@@ -32,6 +40,7 @@ export class GitLabClient {
         sourceBranch: mr.source_branch as string,
         targetBranch: mr.target_branch as string,
         webUrl: mr.web_url as string,
+        diffRefs,
       };
     } catch (error: any) {
       Logger.error('Failed to fetch merge request', error);
@@ -68,7 +77,7 @@ export class GitLabClient {
   }
 
   /**
-   * Post a comment on the merge request
+   * Post a general comment on the merge request
    */
   async postComment(
     projectId: string,
@@ -76,14 +85,58 @@ export class GitLabClient {
     comment: string
   ): Promise<void> {
     try {
-      Logger.debug(`Posting comment to MR ${mrIid}`);
+      Logger.debug(`Posting general comment to MR ${mrIid}`);
 
       await this.client.MergeRequestNotes.create(projectId, mrIid, comment);
 
-      Logger.success('Comment posted successfully');
+      Logger.success('General comment posted successfully');
     } catch (error: any) {
       Logger.error('Failed to post comment', error);
       throw new Error(`Failed to post comment: ${error.message}`);
+    }
+  }
+
+  /**
+   * Post a line-specific comment (discussion) on a file in the merge request
+   */
+  async postLineComment(
+    projectId: string,
+    mrIid: number,
+    filePath: string,
+    lineNumber: number,
+    comment: string,
+    diffRefs?: { baseSha: string; headSha: string; startSha: string }
+  ): Promise<void> {
+    try {
+      Logger.debug(`Posting line comment to ${filePath}:${lineNumber}`);
+
+      if (!diffRefs) {
+        Logger.warn('No diff refs available, posting as general comment instead');
+        await this.postComment(projectId, mrIid, `**${filePath}:${lineNumber}**\n\n${comment}`);
+        return;
+      }
+
+      // Create a discussion with position information
+      const position = {
+        baseSha: diffRefs.baseSha,
+        headSha: diffRefs.headSha,
+        startSha: diffRefs.startSha,
+        positionType: 'text' as const,
+        newPath: filePath,
+        newLine: lineNumber.toString(),
+        oldPath: filePath,
+      };
+
+      await this.client.MergeRequestDiscussions.create(projectId, mrIid, comment, {
+        position,
+      });
+
+      Logger.debug(`Line comment posted to ${filePath}:${lineNumber}`);
+    } catch (error: any) {
+      Logger.error(`Failed to post line comment to ${filePath}:${lineNumber}`, error);
+      // Fallback: post as general comment with file reference
+      Logger.warn('Falling back to general comment');
+      await this.postComment(projectId, mrIid, `**${filePath}:${lineNumber}**\n\n${comment}`);
     }
   }
 }

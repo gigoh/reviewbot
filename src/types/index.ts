@@ -23,6 +23,11 @@ export interface MergeRequestInfo {
   sourceBranch: string;
   targetBranch: string;
   webUrl: string;
+  diffRefs?: {
+    baseSha: string;
+    headSha: string;
+    startSha: string;
+  };
 }
 
 export interface DiffChange {
