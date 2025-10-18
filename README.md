@@ -10,6 +10,7 @@ AI-powered code review bot for GitLab merge requests using Claude AI.
 - Detailed feedback on code quality, security, performance, and best practices
 - Can post reviews directly as merge request comments
 - Structured output in text or JSON format
+- Includes reviewer IP address and timestamp for audit tracking
 
 ## Prerequisites
 
@@ -144,6 +145,8 @@ OVERALL ASSESSMENT:
 APPROVE_WITH_SUGGESTIONS - The code is functional and well-structured, but should
 address the security concerns before merging to production.
 
+--------------------------------------------------------------------------------
+Review generated from IP: 192.168.1.100 at 2025-01-15T10:30:45.123Z
 ================================================================================
 ```
 
@@ -163,6 +166,7 @@ reviewbot/
 │   │   └── index.ts        # TypeScript type definitions
 │   └── utils/
 │       ├── logger.ts       # Logging utilities
+│       ├── network.ts      # Network utilities (IP address)
 │       └── parser.ts       # URL parser
 ├── .env.example            # Environment variables template
 ├── package.json
