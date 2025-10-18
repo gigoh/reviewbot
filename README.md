@@ -7,6 +7,7 @@ AI-powered code review bot for GitLab merge requests using AI (Claude or local L
 - Automated code review using AI
 - **Multiple LLM Providers**: Anthropic Claude or local LLMs via Ollama
 - **Bilingual Reviews**: All feedback provided in both Korean and English
+- **Line-by-Line Comments**: Posts review comments directly on specific lines in changed files
 - Supports GitLab Cloud and self-hosted instances
 - CLI tool for easy integration
 - Detailed feedback on code quality, security, performance, and best practices
@@ -114,11 +115,17 @@ Example:
 reviewbot review --url https://gitlab.com/mygroup/myproject/-/merge_requests/123
 ```
 
-### Post Review as Comment
+### Post Review as Comments
+
+Posts a summary comment on the MR and creates line-specific discussions on each issue found:
 
 ```bash
 reviewbot review --url <merge-request-url> --post
 ```
+
+This will:
+1. Post a summary comment with the overall assessment
+2. Create individual discussions on specific lines for each detailed feedback item
 
 ### JSON Output
 
@@ -224,7 +231,9 @@ reviewbot/
 2. **Fetch MR Data** - Retrieves merge request information and code diffs via GitLab API
 3. **AI Analysis** - Sends code changes to configured LLM (Anthropic or Ollama) for comprehensive review
 4. **Parse Results** - Structures AI feedback into actionable comments
-5. **Output/Post** - Displays results or posts as MR comment
+5. **Output/Post** - Displays results in terminal or posts to GitLab:
+   - Summary comment with overall assessment
+   - Line-specific discussions for each detailed feedback item
 
 ## Limitations
 
