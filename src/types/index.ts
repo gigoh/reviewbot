@@ -1,9 +1,18 @@
+export type LLMProvider = 'anthropic' | 'ollama';
+
 export interface Config {
   gitlabUrl: string;
   gitlabToken: string;
-  anthropicApiKey: string;
+  llmProvider: LLMProvider;
+  anthropicApiKey?: string;
+  ollamaEndpoint?: string;
+  ollamaModel?: string;
   maxDiffSize?: number;
   reviewPromptTemplate?: string;
+}
+
+export interface LLMResponse {
+  text: string;
 }
 
 export interface MergeRequestInfo {

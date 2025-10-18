@@ -1,10 +1,11 @@
 # GitLab ReviewBot
 
-AI-powered code review bot for GitLab merge requests using Claude AI.
+AI-powered code review bot for GitLab merge requests using AI (Claude or local LLMs via Ollama).
 
 ## Features
 
-- Automated code review using Claude AI
+- Automated code review using AI
+- **Multiple LLM Providers**: Anthropic Claude or local LLMs via Ollama
 - Supports GitLab Cloud and self-hosted instances
 - CLI tool for easy integration
 - Detailed feedback on code quality, security, performance, and best practices
@@ -16,7 +17,9 @@ AI-powered code review bot for GitLab merge requests using Claude AI.
 
 - Node.js 18 or higher
 - GitLab personal access token with API access
-- Anthropic API key
+- Either:
+  - Anthropic API key (for Claude), OR
+  - Local Ollama instance (for local LLMs)
 
 ## Installation
 
@@ -43,7 +46,9 @@ npm link
 
 ## Configuration
 
-Create a `.env` file in the project root (use `.env.example` as a template):
+Create a `.env` file in the project root (use `.env.example` as a template).
+
+### Option 1: Using Anthropic Claude (Cloud)
 
 ```bash
 # GitLab Configuration
@@ -51,6 +56,7 @@ GITLAB_URL=https://gitlab.com
 GITLAB_TOKEN=your-gitlab-personal-access-token
 
 # LLM Configuration
+LLM_PROVIDER=anthropic
 ANTHROPIC_API_KEY=your-anthropic-api-key
 
 # Review Settings (optional)
@@ -58,18 +64,41 @@ MAX_DIFF_SIZE=50000
 REVIEW_PROMPT_TEMPLATE=default
 ```
 
-### Getting API Keys
+### Option 2: Using Ollama (Local LLM)
+
+```bash
+# GitLab Configuration
+GITLAB_URL=https://gitlab.com
+GITLAB_TOKEN=your-gitlab-personal-access-token
+
+# LLM Configuration
+LLM_PROVIDER=ollama
+OLLAMA_ENDPOINT=http://localhost:11434
+OLLAMA_MODEL=gemma3:4b
+
+# Review Settings (optional)
+MAX_DIFF_SIZE=50000
+REVIEW_PROMPT_TEMPLATE=default
+```
+
+### Getting API Keys & Setting Up LLMs
 
 **GitLab Personal Access Token:**
 1. Go to GitLab → User Settings → Access Tokens
 2. Create a new token with `api` scope
 3. Copy the token to your `.env` file
 
-**Anthropic API Key:**
+**Anthropic API Key (if using Claude):**
 1. Sign up at https://console.anthropic.com/
 2. Go to API Keys section
 3. Create a new API key
 4. Copy the key to your `.env` file
+
+**Ollama Setup (if using local LLMs):**
+1. Install Ollama from https://ollama.ai/
+2. Pull a model: `ollama pull gemma3:4b` (or any other model)
+3. Start Ollama service (usually runs on http://localhost:11434)
+4. Configure `OLLAMA_ENDPOINT` and `OLLAMA_MODEL` in `.env`
 
 ## Usage
 
@@ -161,7 +190,12 @@ reviewbot/
 │   │   └── index.ts        # Configuration loader
 │   ├── services/
 │   │   ├── gitlab.ts       # GitLab API client
-│   │   └── reviewer.ts     # AI review logic
+│   │   ├── reviewer.ts     # AI review logic
+│   │   └── llm/
+│   │       ├── base.ts     # LLM client interface
+│   │       ├── anthropic.ts # Anthropic implementation
+│   │       ├── ollama.ts    # Ollama implementation
+│   │       └── factory.ts   # LLM client factory
 │   ├── types/
 │   │   └── index.ts        # TypeScript type definitions
 │   └── utils/
@@ -178,7 +212,7 @@ reviewbot/
 
 1. **Parse MR URL** - Extracts project path and merge request ID
 2. **Fetch MR Data** - Retrieves merge request information and code diffs via GitLab API
-3. **AI Analysis** - Sends code changes to Claude AI for comprehensive review
+3. **AI Analysis** - Sends code changes to configured LLM (Anthropic or Ollama) for comprehensive review
 4. **Parse Results** - Structures AI feedback into actionable comments
 5. **Output/Post** - Displays results or posts as MR comment
 
@@ -203,8 +237,17 @@ reviewbot/
 - Ensure the MR number is correct
 
 **API rate limits**
-- Both GitLab and Anthropic have rate limits
+- GitLab and Anthropic have rate limits
 - Consider adding delays between multiple reviews
+
+**"Failed to generate completion from Ollama"**
+- Ensure Ollama is running: `ollama serve`
+- Verify the endpoint is correct (default: http://localhost:11434)
+- Check that the model is installed: `ollama list`
+- Pull the model if needed: `ollama pull gemma3:4b`
+
+**"Unsupported LLM provider"**
+- Check that `LLM_PROVIDER` is set to either `anthropic` or `ollama`
 
 ## Contributing
 
