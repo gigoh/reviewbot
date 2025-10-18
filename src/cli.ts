@@ -3,6 +3,7 @@
 import { Command } from 'commander';
 import { reviewMergeRequest } from './index';
 import { Logger } from './utils/logger';
+import { getReviewMetadata } from './utils/network';
 
 const program = new Command();
 
@@ -52,7 +53,9 @@ program
 
         console.log('OVERALL ASSESSMENT:');
         console.log(result.overallAssessment);
-        console.log('\n' + '='.repeat(80) + '\n');
+        console.log('\n' + '-'.repeat(80));
+        console.log(getReviewMetadata());
+        console.log('='.repeat(80) + '\n');
 
         if (options.post) {
           Logger.success('Review has been posted as a comment on the merge request');
