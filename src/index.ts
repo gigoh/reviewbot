@@ -34,8 +34,16 @@ export async function reviewMergeRequest(
     const itemType = platform === 'github' ? 'PR' : 'MR';
     Logger.info(`Reviewing ${itemType} #${mrIid} in project: ${projectId}`);
 
+    // Validate that the appropriate token exists for the detected platform
+    if (platform === 'gitlab' && !config.gitlabToken) {
+      throw new Error('GITLAB_TOKEN environment variable is required to review GitLab merge requests');
+    }
+    if (platform === 'github' && !config.githubToken) {
+      throw new Error('GITHUB_TOKEN environment variable is required to review GitHub pull requests');
+    }
+
     // Initialize clients
-    const vcsClient = createVCSClient(config);
+    const vcsClient = createVCSClient(config, platform);
     const aiReviewer = new AIReviewer(config);
 
     // Fetch MR/PR information

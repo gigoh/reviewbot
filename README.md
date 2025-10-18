@@ -51,15 +51,15 @@ npm link
 
 Create a `.env` file in the project root (use `.env.example` as a template).
 
-### Option 1: Using GitLab + Anthropic Claude
+**Note**: The platform (GitLab or GitHub) is automatically detected from the MR/PR URL, so you don't need to specify `VCS_PLATFORM`. You can configure both GitLab and GitHub tokens to work with both platforms seamlessly.
+
+### Option 1: Using Anthropic Claude (supports both GitLab and GitHub)
 
 ```bash
-# VCS Platform Configuration
-VCS_PLATFORM=gitlab
-
-# GitLab Configuration
-GITLAB_URL=https://gitlab.com
-GITLAB_TOKEN=your-gitlab-personal-access-token
+# VCS Configuration (configure one or both)
+GITLAB_URL=https://gitlab.com  # Optional, defaults to https://gitlab.com
+GITLAB_TOKEN=your-gitlab-personal-access-token  # Required for GitLab MRs
+GITHUB_TOKEN=your-github-personal-access-token  # Required for GitHub PRs
 
 # LLM Configuration
 LLM_PROVIDER=anthropic
@@ -71,34 +71,13 @@ MAX_DIFF_SIZE=50000
 REVIEW_PROMPT_TEMPLATE=default
 ```
 
-### Option 2: Using GitHub + Anthropic Claude
+### Option 2: Using Ollama (supports both GitLab and GitHub)
 
 ```bash
-# VCS Platform Configuration
-VCS_PLATFORM=github
-
-# GitHub Configuration
-GITHUB_TOKEN=your-github-personal-access-token
-
-# LLM Configuration
-LLM_PROVIDER=anthropic
-ANTHROPIC_API_KEY=your-anthropic-api-key
-
-# Review Settings (optional)
-REVIEW_LANGUAGE=english  # or 'korean', 'japanese', 'chinese'
-MAX_DIFF_SIZE=50000
-REVIEW_PROMPT_TEMPLATE=default
-```
-
-### Option 3: Using GitLab + Ollama (Local LLM)
-
-```bash
-# VCS Platform Configuration
-VCS_PLATFORM=gitlab
-
-# GitLab Configuration
-GITLAB_URL=https://gitlab.com
-GITLAB_TOKEN=your-gitlab-personal-access-token
+# VCS Configuration (configure one or both)
+GITLAB_URL=https://gitlab.com  # Optional, defaults to https://gitlab.com
+GITLAB_TOKEN=your-gitlab-personal-access-token  # Required for GitLab MRs
+GITHUB_TOKEN=your-github-personal-access-token  # Required for GitHub PRs
 
 # LLM Configuration
 LLM_PROVIDER=ollama
@@ -111,24 +90,20 @@ MAX_DIFF_SIZE=50000
 REVIEW_PROMPT_TEMPLATE=default
 ```
 
-### Option 4: Using GitHub + Ollama (Local LLM)
+### Minimal Configurations
 
+If you only use one platform, you only need to configure that token:
+
+#### GitLab only + Anthropic:
 ```bash
-# VCS Platform Configuration
-VCS_PLATFORM=github
+GITLAB_TOKEN=your-gitlab-token
+ANTHROPIC_API_KEY=your-anthropic-key
+```
 
-# GitHub Configuration
-GITHUB_TOKEN=your-github-personal-access-token
-
-# LLM Configuration
+#### GitHub only + Ollama:
+```bash
+GITHUB_TOKEN=your-github-token
 LLM_PROVIDER=ollama
-OLLAMA_ENDPOINT=http://localhost:11434
-OLLAMA_MODEL=gemma3:4b
-
-# Review Settings (optional)
-REVIEW_LANGUAGE=english  # or 'korean', 'japanese', 'chinese'
-MAX_DIFF_SIZE=50000
-REVIEW_PROMPT_TEMPLATE=default
 ```
 
 ### Getting API Keys & Setting Up LLMs
@@ -214,6 +189,7 @@ Options:
   -u, --url <url>        GitLab MR or GitHub PR URL (required)
   -p, --post             Post the review as a comment on the MR/PR
   -f, --format <format>  Output format: text or json (default: "text")
+  -v, --verbose          Enable verbose logging (shows API requests/responses)
   -h, --help             Display help for command
 ```
 
@@ -349,9 +325,15 @@ reviewbot/
 
 ## Troubleshooting
 
-**"GITLAB_TOKEN environment variable is required" / "GITHUB_TOKEN environment variable is required"**
-- Make sure you have created a `.env` file with the appropriate token for your VCS platform
-- Ensure `VCS_PLATFORM` is set correctly (gitlab or github)
+**"At least one of GITLAB_TOKEN or GITHUB_TOKEN environment variable is required"**
+- Make sure you have created a `.env` file with at least one VCS token
+- The platform is automatically detected from the URL you provide
+
+**"GITLAB_TOKEN environment variable is required to review GitLab merge requests"**
+- Add `GITLAB_TOKEN` to your `.env` file if you want to review GitLab MRs
+
+**"GITHUB_TOKEN environment variable is required to review GitHub pull requests"**
+- Add `GITHUB_TOKEN` to your `.env` file if you want to review GitHub PRs
 
 **"Invalid merge/pull request URL format"**
 - GitLab format: `https://gitlab.com/group/project/-/merge_requests/123`

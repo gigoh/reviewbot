@@ -1,13 +1,13 @@
-import { Config } from '../../types';
+import { Config, VCSPlatform } from '../../types';
 import { IVCSClient } from './base';
 import { GitLabAdapter } from './gitlab-adapter';
 import { GitHubAdapter } from './github-adapter';
 
 /**
- * Factory function to create the appropriate VCS client based on configuration
+ * Factory function to create the appropriate VCS client based on platform
  */
-export function createVCSClient(config: Config): IVCSClient {
-  switch (config.vcsPlatform) {
+export function createVCSClient(config: Config, platform: VCSPlatform): IVCSClient {
+  switch (platform) {
     case 'gitlab':
       return new GitLabAdapter(config);
 
@@ -15,6 +15,6 @@ export function createVCSClient(config: Config): IVCSClient {
       return new GitHubAdapter(config);
 
     default:
-      throw new Error(`Unsupported VCS platform: ${config.vcsPlatform}`);
+      throw new Error(`Unsupported VCS platform: ${platform}`);
   }
 }
