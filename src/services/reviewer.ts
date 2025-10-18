@@ -1,15 +1,14 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { Config, DiffChange, MergeRequestInfo, ReviewResult, ReviewComment } from '../types';
 import { Logger } from '../utils/logger';
+import { ILLMClient } from './llm/base';
+import { createLLMClient } from './llm/factory';
 
 export class AIReviewer {
-  private client: Anthropic;
+  private llmClient: ILLMClient;
   private maxDiffSize: number;
 
   constructor(config: Config) {
-    this.client = new Anthropic({
-      apiKey: config.anthropicApiKey,
-    });
+    this.llmClient = createLLMClient(config);
     this.maxDiffSize = config.maxDiffSize || 50000;
   }
 
@@ -51,23 +50,12 @@ export class AIReviewer {
       // Create the review prompt
       const prompt = this.createReviewPrompt(mrInfo, truncatedDiff);
 
-      // Call Claude API
-      Logger.debug('Calling Claude API for code review');
-      const response = await this.client.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4096,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-      });
-
-      const reviewText = response.content[0].type === 'text' ? response.content[0].text : '';
+      // Call LLM API
+      Logger.debug('Calling LLM API for code review');
+      const response = await this.llmClient.generateCompletion(prompt);
 
       // Parse the response into structured format
-      const result = this.parseReviewResponse(reviewText);
+      const result = this.parseReviewResponse(response.text);
 
       Logger.success('AI review completed successfully');
       return result;
