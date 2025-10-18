@@ -19,15 +19,17 @@ program
   .requiredOption('-u, --url <url>', 'GitLab merge request URL')
   .option('-p, --post', 'Post the review as a comment on the MR', false)
   .option('-f, --format <format>', 'Output format: text or json', 'text')
+  .option('-v, --verbose', 'Enable verbose logging (shows API requests/responses)', false)
   .action(async (options) => {
     try {
       // Load config to get LLM provider info for metadata
-      const config = loadConfig();
+      const config = loadConfig(options.verbose);
 
       const result = await reviewMergeRequest({
         mrUrl: options.url,
         postComment: options.post,
         outputFormat: options.format,
+        verbose: options.verbose,
       });
 
       if (options.format === 'json') {

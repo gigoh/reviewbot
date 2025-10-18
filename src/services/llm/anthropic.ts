@@ -16,15 +16,27 @@ export class AnthropicClient implements ILLMClient {
     try {
       Logger.debug('Calling Anthropic API for completion');
 
-      const response = await this.client.messages.create({
+      const requestPayload = {
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4096,
         messages: [
           {
-            role: 'user',
+            role: 'user' as const,
             content: prompt,
           },
         ],
+      };
+
+      Logger.verboseRequest('Anthropic API', 'POST', requestPayload);
+
+      const response = await this.client.messages.create(requestPayload);
+
+      Logger.verboseResponse('Anthropic API', response.stop_reason || 'completed', {
+        id: response.id,
+        model: response.model,
+        role: response.role,
+        content: response.content,
+        usage: response.usage,
       });
 
       const text = response.content[0].type === 'text' ? response.content[0].text : '';

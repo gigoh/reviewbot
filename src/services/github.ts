@@ -22,10 +22,21 @@ export class GitHubClient {
     try {
       Logger.debug(`Fetching PR ${prNumber} from ${owner}/${repo}`);
 
+      Logger.verboseRequest('GitHub API - pulls.get', 'GET', { owner, repo, pull_number: prNumber });
+
       const { data: pr } = await this.client.pulls.get({
         owner,
         repo,
         pull_number: prNumber,
+      });
+
+      Logger.verboseResponse('GitHub API - pulls.get', 200, {
+        id: pr.id,
+        number: pr.number,
+        title: pr.title,
+        state: pr.state,
+        head: pr.head.ref,
+        base: pr.base.ref,
       });
 
       return {
@@ -60,10 +71,17 @@ export class GitHubClient {
     try {
       Logger.debug(`Fetching changes for PR ${prNumber}`);
 
+      Logger.verboseRequest('GitHub API - pulls.listFiles', 'GET', { owner, repo, pull_number: prNumber });
+
       const { data: files } = await this.client.pulls.listFiles({
         owner,
         repo,
         pull_number: prNumber,
+      });
+
+      Logger.verboseResponse('GitHub API - pulls.listFiles', 200, {
+        files_count: files.length,
+        files: files.map((f) => ({ filename: f.filename, status: f.status, additions: f.additions, deletions: f.deletions })),
       });
 
       const changes: DiffChange[] = files.map((file) => ({
@@ -94,12 +112,21 @@ export class GitHubClient {
     try {
       Logger.debug(`Posting general comment to PR ${prNumber}`);
 
+      Logger.verboseRequest('GitHub API - issues.createComment', 'POST', {
+        owner,
+        repo,
+        issue_number: prNumber,
+        body: comment.substring(0, 100) + (comment.length > 100 ? '...' : ''),
+      });
+
       await this.client.issues.createComment({
         owner,
         repo,
         issue_number: prNumber,
         body: comment,
       });
+
+      Logger.verboseResponse('GitHub API - issues.createComment', 201, { status: 'created' });
 
       Logger.success('General comment posted successfully');
     } catch (error: any) {
@@ -130,6 +157,17 @@ export class GitHubClient {
       }
 
       // Create a review comment with position information
+      Logger.verboseRequest('GitHub API - pulls.createReviewComment', 'POST', {
+        owner,
+        repo,
+        pull_number: prNumber,
+        commit_id: diffRefs.headSha,
+        path: filePath,
+        body: comment.substring(0, 100) + (comment.length > 100 ? '...' : ''),
+        line: lineNumber,
+        side: 'RIGHT',
+      });
+
       await this.client.pulls.createReviewComment({
         owner,
         repo,
@@ -140,6 +178,8 @@ export class GitHubClient {
         line: lineNumber,
         side: 'RIGHT',
       });
+
+      Logger.verboseResponse('GitHub API - pulls.createReviewComment', 201, { status: 'created' });
 
       Logger.debug(`Line comment posted to ${filePath}:${lineNumber}`);
     } catch (error: any) {

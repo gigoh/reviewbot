@@ -3,7 +3,7 @@ import { Config, LLMProvider, ReviewLanguage, VCSPlatform } from '../types';
 
 dotenv.config();
 
-export function loadConfig(): Config {
+export function loadConfig(verbose?: boolean): Config {
   const vcsPlatform = (process.env.VCS_PLATFORM || 'gitlab') as VCSPlatform;
   const gitlabUrl = process.env.GITLAB_URL || 'https://gitlab.com';
   const gitlabToken = process.env.GITLAB_TOKEN;
@@ -39,6 +39,7 @@ export function loadConfig(): Config {
         ? parseInt(process.env.MAX_DIFF_SIZE, 10)
         : 50000,
       reviewPromptTemplate: process.env.REVIEW_PROMPT_TEMPLATE || 'default',
+      verbose: verbose || false,
     };
   } else if (llmProvider === 'ollama') {
     const ollamaEndpoint = process.env.OLLAMA_ENDPOINT || 'http://localhost:11434';
@@ -57,6 +58,7 @@ export function loadConfig(): Config {
         ? parseInt(process.env.MAX_DIFF_SIZE, 10)
         : 50000,
       reviewPromptTemplate: process.env.REVIEW_PROMPT_TEMPLATE || 'default',
+      verbose: verbose || false,
     };
   } else {
     throw new Error(`Unsupported LLM provider: ${llmProvider}. Supported providers: anthropic, ollama`);
