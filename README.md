@@ -1,24 +1,25 @@
-# GitLab ReviewBot
+# ReviewBot
 
-AI-powered code review bot for GitLab merge requests using AI (Claude or local LLMs via Ollama).
+AI-powered code review bot for GitLab and GitHub using AI (Claude or local LLMs via Ollama).
 
 ## Features
 
-- Automated code review using AI
+- **Multi-Platform Support**: Works with both GitLab and GitHub
+- **Automated code review using AI**
 - **Multiple LLM Providers**: Anthropic Claude or local LLMs via Ollama
 - **Configurable Language**: English-only or bilingual reviews (Korean/Japanese/Chinese + English)
 - **Line-by-Line Comments**: Posts review comments directly on specific lines in changed files
-- Supports GitLab Cloud and self-hosted instances
+- Supports GitLab Cloud/self-hosted instances and GitHub
 - CLI tool for easy integration
 - Detailed feedback on code quality, security, performance, and best practices
-- Can post reviews directly as merge request comments
+- Can post reviews directly as merge/pull request comments
 - Structured output in text or JSON format
 - Includes LLM provider/model, tool version, and timestamp for audit tracking
 
 ## Prerequisites
 
 - Node.js 18 or higher
-- GitLab personal access token with API access
+- Either GitLab personal access token OR GitHub personal access token with API access
 - Either:
   - Anthropic API key (for Claude), OR
   - Local Ollama instance (for local LLMs)
@@ -50,9 +51,12 @@ npm link
 
 Create a `.env` file in the project root (use `.env.example` as a template).
 
-### Option 1: Using Anthropic Claude (Cloud)
+### Option 1: Using GitLab + Anthropic Claude
 
 ```bash
+# VCS Platform Configuration
+VCS_PLATFORM=gitlab
+
 # GitLab Configuration
 GITLAB_URL=https://gitlab.com
 GITLAB_TOKEN=your-gitlab-personal-access-token
@@ -67,12 +71,54 @@ MAX_DIFF_SIZE=50000
 REVIEW_PROMPT_TEMPLATE=default
 ```
 
-### Option 2: Using Ollama (Local LLM)
+### Option 2: Using GitHub + Anthropic Claude
 
 ```bash
+# VCS Platform Configuration
+VCS_PLATFORM=github
+
+# GitHub Configuration
+GITHUB_TOKEN=your-github-personal-access-token
+
+# LLM Configuration
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=your-anthropic-api-key
+
+# Review Settings (optional)
+REVIEW_LANGUAGE=english  # or 'korean', 'japanese', 'chinese'
+MAX_DIFF_SIZE=50000
+REVIEW_PROMPT_TEMPLATE=default
+```
+
+### Option 3: Using GitLab + Ollama (Local LLM)
+
+```bash
+# VCS Platform Configuration
+VCS_PLATFORM=gitlab
+
 # GitLab Configuration
 GITLAB_URL=https://gitlab.com
 GITLAB_TOKEN=your-gitlab-personal-access-token
+
+# LLM Configuration
+LLM_PROVIDER=ollama
+OLLAMA_ENDPOINT=http://localhost:11434
+OLLAMA_MODEL=gemma3:4b
+
+# Review Settings (optional)
+REVIEW_LANGUAGE=english  # or 'korean', 'japanese', 'chinese'
+MAX_DIFF_SIZE=50000
+REVIEW_PROMPT_TEMPLATE=default
+```
+
+### Option 4: Using GitHub + Ollama (Local LLM)
+
+```bash
+# VCS Platform Configuration
+VCS_PLATFORM=github
+
+# GitHub Configuration
+GITHUB_TOKEN=your-github-personal-access-token
 
 # LLM Configuration
 LLM_PROVIDER=ollama
@@ -90,6 +136,11 @@ REVIEW_PROMPT_TEMPLATE=default
 **GitLab Personal Access Token:**
 1. Go to GitLab → User Settings → Access Tokens
 2. Create a new token with `api` scope
+3. Copy the token to your `.env` file
+
+**GitHub Personal Access Token:**
+1. Go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. Generate new token with `repo` scope (for private repos) or `public_repo` (for public repos only)
 3. Copy the token to your `.env` file
 
 **Anthropic API Key (if using Claude):**
@@ -120,14 +171,18 @@ When using a non-English language, the bot provides bilingual output with the se
 reviewbot review --url <merge-request-url>
 ```
 
-Example:
+Examples:
 ```bash
+# GitLab
 reviewbot review --url https://gitlab.com/mygroup/myproject/-/merge_requests/123
+
+# GitHub
+reviewbot review --url https://github.com/owner/repo/pull/456
 ```
 
 ### Post Review as Comments
 
-Posts a summary comment on the MR and creates line-specific discussions on each issue found:
+Posts a summary comment on the MR/PR and creates line-specific discussions on each issue found:
 
 ```bash
 reviewbot review --url <merge-request-url> --post
@@ -135,7 +190,7 @@ reviewbot review --url <merge-request-url> --post
 
 This will:
 1. Post a summary comment with the overall assessment
-2. Create individual discussions on specific lines for each detailed feedback item
+2. Create individual discussions/review comments on specific lines for each detailed feedback item
 
 ### JSON Output
 
@@ -156,8 +211,8 @@ npm run dev -- review --url <merge-request-url>
 reviewbot review [options]
 
 Options:
-  -u, --url <url>        GitLab merge request URL (required)
-  -p, --post             Post the review as a comment on the MR
+  -u, --url <url>        GitLab MR or GitHub PR URL (required)
+  -p, --post             Post the review as a comment on the MR/PR
   -f, --format <format>  Output format: text or json (default: "text")
   -h, --help             Display help for command
 ```
@@ -251,7 +306,13 @@ reviewbot/
 │   │   └── index.ts        # Configuration loader
 │   ├── services/
 │   │   ├── gitlab.ts       # GitLab API client
+│   │   ├── github.ts       # GitHub API client
 │   │   ├── reviewer.ts     # AI review logic
+│   │   ├── vcs/
+│   │   │   ├── base.ts     # VCS client interface
+│   │   │   ├── gitlab-adapter.ts # GitLab adapter
+│   │   │   ├── github-adapter.ts # GitHub adapter
+│   │   │   └── factory.ts   # VCS client factory
 │   │   └── llm/
 │   │       ├── base.ts     # LLM client interface
 │   │       ├── anthropic.ts # Anthropic implementation
@@ -262,7 +323,7 @@ reviewbot/
 │   └── utils/
 │       ├── logger.ts       # Logging utilities
 │       ├── metadata.ts     # Review metadata (LLM info)
-│       └── parser.ts       # URL parser
+│       └── parser.ts       # URL parser (GitLab/GitHub)
 ├── .env.example            # Environment variables template
 ├── package.json
 ├── tsconfig.json
@@ -271,13 +332,13 @@ reviewbot/
 
 ## How It Works
 
-1. **Parse MR URL** - Extracts project path and merge request ID
-2. **Fetch MR Data** - Retrieves merge request information and code diffs via GitLab API
+1. **Parse URL** - Detects platform (GitLab/GitHub) and extracts project identifier and MR/PR number
+2. **Fetch Data** - Retrieves merge/pull request information and code diffs via platform API
 3. **AI Analysis** - Sends code changes to configured LLM (Anthropic or Ollama) for comprehensive review
 4. **Parse Results** - Structures AI feedback into actionable comments
-5. **Output/Post** - Displays results in terminal or posts to GitLab:
+5. **Output/Post** - Displays results in terminal or posts to the platform:
    - Summary comment with overall assessment
-   - Line-specific discussions for each detailed feedback item
+   - Line-specific discussions/review comments for each detailed feedback item
 
 ## Limitations
 
@@ -288,19 +349,23 @@ reviewbot/
 
 ## Troubleshooting
 
-**"GITLAB_TOKEN environment variable is required"**
-- Make sure you have created a `.env` file with your GitLab token
+**"GITLAB_TOKEN environment variable is required" / "GITHUB_TOKEN environment variable is required"**
+- Make sure you have created a `.env` file with the appropriate token for your VCS platform
+- Ensure `VCS_PLATFORM` is set correctly (gitlab or github)
 
-**"Invalid GitLab merge request URL format"**
-- Ensure the URL follows the format: `https://gitlab.com/group/project/-/merge_requests/123`
+**"Invalid merge/pull request URL format"**
+- GitLab format: `https://gitlab.com/group/project/-/merge_requests/123`
+- GitHub format: `https://github.com/owner/repo/pull/456`
 
-**"Failed to fetch merge request"**
-- Verify your GitLab token has `api` scope
-- Check that you have access to the project
-- Ensure the MR number is correct
+**"Failed to fetch merge request" / "Failed to fetch pull request"**
+- Verify your token has the correct scopes:
+  - GitLab: `api` scope
+  - GitHub: `repo` or `public_repo` scope
+- Check that you have access to the repository
+- Ensure the MR/PR number is correct
 
 **API rate limits**
-- GitLab and Anthropic have rate limits
+- GitLab, GitHub, and Anthropic have rate limits
 - Consider adding delays between multiple reviews
 
 **"Failed to generate completion from Ollama"**

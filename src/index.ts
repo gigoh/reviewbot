@@ -1,5 +1,5 @@
 import { loadConfig } from './config';
-import { GitLabClient } from './services/gitlab';
+import { createVCSClient } from './services/vcs/factory';
 import { AIReviewer } from './services/reviewer';
 import { parseMergeRequestUrl } from './utils/parser';
 import { Logger } from './utils/logger';
@@ -13,7 +13,7 @@ export interface ReviewOptions {
 }
 
 /**
- * Main function to review a GitLab merge request
+ * Main function to review a merge/pull request
  */
 export async function reviewMergeRequest(
   options: ReviewOptions
@@ -22,21 +22,22 @@ export async function reviewMergeRequest(
     // Load configuration
     const config = loadConfig();
 
-    // Parse the MR URL
-    const { projectPath, mrIid } = parseMergeRequestUrl(options.mrUrl);
-    Logger.info(`Reviewing MR #${mrIid} in project: ${projectPath}`);
+    // Parse the MR/PR URL
+    const { platform, projectId, mrIid } = parseMergeRequestUrl(options.mrUrl);
+    const itemType = platform === 'github' ? 'PR' : 'MR';
+    Logger.info(`Reviewing ${itemType} #${mrIid} in project: ${projectId}`);
 
     // Initialize clients
-    const gitlabClient = new GitLabClient(config);
+    const vcsClient = createVCSClient(config);
     const aiReviewer = new AIReviewer(config);
 
-    // Fetch MR information
-    Logger.info('Fetching merge request details...');
-    const mrInfo = await gitlabClient.getMergeRequest(projectPath, mrIid);
+    // Fetch MR/PR information
+    Logger.info('Fetching merge/pull request details...');
+    const mrInfo = await vcsClient.getMergeRequest(projectId, mrIid);
 
-    // Fetch MR changes
+    // Fetch MR/PR changes
     Logger.info('Fetching code changes...');
-    const changes = await gitlabClient.getMergeRequestChanges(projectPath, mrIid);
+    const changes = await vcsClient.getMergeRequestChanges(projectId, mrIid);
 
     Logger.info(`Found ${changes.length} changed file(s)`);
 
@@ -49,7 +50,7 @@ export async function reviewMergeRequest(
 
       // Post summary and overall assessment as a general comment
       const summaryComment = formatSummaryComment(reviewResult, config);
-      await gitlabClient.postComment(projectPath, mrIid, summaryComment);
+      await vcsClient.postComment(projectId, mrIid, summaryComment);
 
       // Post each detailed comment as a line-specific discussion
       if (reviewResult.comments.length > 0) {
@@ -58,8 +59,8 @@ export async function reviewMergeRequest(
         for (const item of reviewResult.comments) {
           if (item.lineNumber) {
             const lineComment = formatLineComment(item);
-            await gitlabClient.postLineComment(
-              projectPath,
+            await vcsClient.postLineComment(
+              projectId,
               mrIid,
               item.filePath,
               item.lineNumber,
@@ -69,7 +70,7 @@ export async function reviewMergeRequest(
           } else {
             // If no line number, post as general comment with file reference
             const fileComment = `**${item.filePath}**\n\n${formatLineComment(item)}`;
-            await gitlabClient.postComment(projectPath, mrIid, fileComment);
+            await vcsClient.postComment(projectId, mrIid, fileComment);
           }
         }
       }

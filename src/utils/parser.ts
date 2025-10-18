@@ -1,19 +1,42 @@
-/**
- * Parse GitLab MR URL to extract project path and MR IID
- * Supports formats:
- * - https://gitlab.com/group/project/-/merge_requests/123
- * - https://gitlab.example.com/group/subgroup/project/-/merge_requests/456
- */
-export function parseMergeRequestUrl(url: string): { projectPath: string; mrIid: number } {
-  const regex = /^https?:\/\/[^\/]+\/(.+)\/-\/merge_requests\/(\d+)/;
-  const match = url.match(regex);
+import { VCSPlatform } from '../types';
 
-  if (!match) {
-    throw new Error('Invalid GitLab merge request URL format');
+/**
+ * Parse VCS URL to extract platform, project identifier, and MR/PR number
+ * Supports formats:
+ * - GitLab: https://gitlab.com/group/project/-/merge_requests/123
+ * - GitLab: https://gitlab.example.com/group/subgroup/project/-/merge_requests/456
+ * - GitHub: https://github.com/owner/repo/pull/123
+ */
+export function parseMergeRequestUrl(url: string): {
+  platform: VCSPlatform;
+  projectId: string;
+  mrIid: number;
+} {
+  // Try GitHub PR URL format first
+  const githubRegex = /^https?:\/\/github\.com\/([^\/]+\/[^\/]+)\/pull\/(\d+)/;
+  const githubMatch = url.match(githubRegex);
+
+  if (githubMatch) {
+    return {
+      platform: 'github',
+      projectId: githubMatch[1], // owner/repo
+      mrIid: parseInt(githubMatch[2], 10),
+    };
   }
 
-  const projectPath = match[1];
-  const mrIid = parseInt(match[2], 10);
+  // Try GitLab MR URL format
+  const gitlabRegex = /^https?:\/\/[^\/]+\/(.+)\/-\/merge_requests\/(\d+)/;
+  const gitlabMatch = url.match(gitlabRegex);
 
-  return { projectPath, mrIid };
+  if (gitlabMatch) {
+    return {
+      platform: 'gitlab',
+      projectId: gitlabMatch[1], // project path
+      mrIid: parseInt(gitlabMatch[2], 10),
+    };
+  }
+
+  throw new Error('Invalid merge/pull request URL format. Supported formats:\n' +
+    '  GitLab: https://gitlab.com/group/project/-/merge_requests/123\n' +
+    '  GitHub: https://github.com/owner/repo/pull/123');
 }
