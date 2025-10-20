@@ -12,5 +12,8 @@ module.exports = {
     '!src/cli.ts',
   ],
   moduleFileExtensions: ['ts', 'js', 'json'],
+  transformIgnorePatterns: [
+    'node_modules/(?!(@octokit|@gitbeaker)/.*)',
+  ],
   verbose: true,
 };
