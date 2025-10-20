@@ -138,6 +138,30 @@ LLM_PROVIDER=ollama
 
 When using a non-English language, the bot provides bilingual output with the selected language side-by-side with English for easier understanding by international teams.
 
+**Review Prompt Templates:**
+
+Choose different review styles using the `REVIEW_PROMPT_TEMPLATE` environment variable:
+
+- `default` (recommended): Comprehensive code review covering quality, best practices, bugs, performance, security, and testing
+- `concise`: Quick, focused review highlighting only critical issues and major suggestions - ideal for rapid feedback
+- `security`: Security-focused review emphasizing vulnerabilities, authentication, authorization, and data protection
+- `performance`: Performance-focused review emphasizing optimization, scalability, and resource usage
+
+Examples:
+```bash
+# Comprehensive review (default)
+REVIEW_PROMPT_TEMPLATE=default
+
+# Quick review for minor changes
+REVIEW_PROMPT_TEMPLATE=concise
+
+# Security audit for auth-related changes
+REVIEW_PROMPT_TEMPLATE=security
+
+# Performance review for optimization PRs
+REVIEW_PROMPT_TEMPLATE=performance
+```
+
 ## Usage
 
 ### Basic Review (Terminal Output)
