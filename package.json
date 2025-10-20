@@ -10,9 +10,17 @@
     "build": "tsc",
     "dev": "ts-node src/cli.ts",
     "start": "node dist/cli.js",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
-  "keywords": ["gitlab", "code-review", "ai", "cli"],
+  "keywords": [
+    "gitlab",
+    "code-review",
+    "ai",
+    "cli"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -23,7 +31,10 @@
     "dotenv": "^16.4.7"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.10.2",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   }
