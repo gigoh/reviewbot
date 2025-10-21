@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { getLLMInfo, getReviewMetadata } from '../../src/utils/metadata';
 import { Config } from '../../src/types';
 
@@ -79,14 +80,35 @@ describe('Metadata Utilities', () => {
   });
 
   describe('getReviewMetadata', () => {
+    let originalDate: typeof Date;
+
     beforeEach(() => {
       // Mock Date to ensure consistent timestamps in tests
-      jest.useFakeTimers();
-      jest.setSystemTime(new Date('2025-01-15T10:30:45.123Z'));
+      originalDate = Date;
+      const mockDate = new Date('2025-01-15T10:30:45.123Z');
+      let timeOffset = 0;
+
+      (global as any).Date = class extends Date {
+        constructor(...args: any[]) {
+          if (args.length === 0) {
+            super(mockDate.getTime() + timeOffset);
+          } else {
+            super(...args);
+          }
+        }
+
+        static now() {
+          return mockDate.getTime() + timeOffset;
+        }
+
+        static advanceTime(ms: number) {
+          timeOffset += ms;
+        }
+      };
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      global.Date = originalDate;
     });
 
     it('should generate complete metadata for Anthropic', () => {
@@ -165,7 +187,7 @@ describe('Metadata Utilities', () => {
       const metadata1 = getReviewMetadata(config);
 
       // Advance time by 5 seconds
-      jest.advanceTimersByTime(5000);
+      (Date as any).advanceTime(5000);
 
       const metadata2 = getReviewMetadata(config);
 

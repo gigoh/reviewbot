@@ -8,7 +8,14 @@
       "Bash(npm test)",
       "Bash(npm run test:coverage)",
       "Bash(git checkout feature/prompt-template)",
-      "Bash(git add jest.config.js tests/ .gitignore package.json package-lock.json)"
+      "Bash(git add jest.config.js tests/ .gitignore package.json package-lock.json)",
+      "Bash(bun --version)",
+      "Bash(bun install)",
+      "Bash(bun run type-check)",
+      "Bash(bun test)",
+      "Bash(bun run dev --help)",
+      "Bash(bun run build)",
+      "Bash(bun run start --help)"
     ],
     "deny": [],
     "ask": []

@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'bun:test';
 import { getPromptTemplate, getAvailableTemplates } from '../../src/services/prompts';
 import { MergeRequestInfo, ReviewLanguage } from '../../src/types';
 
@@ -87,16 +88,21 @@ FILE: src/auth.ts
     });
 
     it('should fallback to default template for unknown template names', () => {
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const originalWarn = console.warn;
+      let warnCalled = false;
+      let warnMessage = '';
+      console.warn = (msg: string) => {
+        warnCalled = true;
+        warnMessage = msg;
+      };
 
       const template = getPromptTemplate('unknown-template');
 
       expect(template.name).toBe('default');
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Unknown template "unknown-template", falling back to default'
-      );
+      expect(warnCalled).toBe(true);
+      expect(warnMessage).toBe('Unknown template "unknown-template", falling back to default');
 
-      consoleSpy.mockRestore();
+      console.warn = originalWarn;
     });
   });
 

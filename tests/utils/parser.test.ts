@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'bun:test';
 import { parseMergeRequestUrl } from '../../src/utils/parser';
 
 describe('URL Parser', () => {

@@ -1,10 +1,10 @@
+import { describe, it, expect, beforeEach, afterAll } from 'bun:test';
 import { loadConfig } from '../../src/config';
 
 describe('Configuration Loader', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    jest.resetModules();
     process.env = { ...originalEnv };
   });
 
